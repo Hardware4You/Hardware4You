@@ -1,0 +1,80 @@
+﻿@using ApexCharts
+@using Hardware4You.Data
+@using Hardware4You.Models
+@inject IOrderStatusLogService OrderStatusLogService
+
+<!-- Statistik für Geldeinnahmen -->
+<MudContainer Class="pa-4">
+    <ApexChart @ref="chart" TItem="Sales" Title="Verkaufte Produkte" Options="_options" XAxisType="XAxisType.Datetime">
+        <ApexPointSeries TItem="Sales" Items="currentSales" Name="sold" SeriesType="SeriesType.Area" XValue="@(e => e.Date.ToUnixTimeMilliseconds())" YValue="@(e => e.sold)" OrderBy="e => e.X" />
+    </ApexChart>
+</MudContainer>
+
+@code {
+    private ApexChart<Sales> chart;
+    private ApexChartOptions<Sales> _options { get; set; } = new();
+    private List<Sales> currentSales = new List<Sales>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        /* wird erst angezeigt, wenn Status der Bestellung auf completed wechselt */
+            var logs = OrderStatusLogService.GetLogs();
+            var completedOrders = logs
+                .Where(log => log.NewStatus == "Erledigt")
+                .GroupBy(log => log.Timestamp.Date)
+                .Select(group => new Sales
+                    {
+                        Date = group.Key,
+                        sold = group.Sum(log => 1) // Jede abgeschlossene Bestellung
+                    })
+                .OrderBy(sale => sale.Date)
+                .ToList();
+
+            currentSales.AddRange(completedOrders);
+
+            _options.Tooltip = new ApexCharts.Tooltip { X = new TooltipX { Format = @"dd MMM" } };
+            _options.Chart.Toolbar = new()
+                {
+                    Show = false
+                };
+
+            _options = new()
+                {
+                    Chart = new()
+                    {
+                        Type = ApexCharts.ChartType.Area
+                    },
+
+                    DataLabels = new()
+                    {
+                        Enabled = false
+                    },
+
+                    Fill = new()
+                    {
+                        Type = FillType.Gradient,
+                        Gradient = new FillGradient
+                        {
+                            Type = GradientType.Vertical,
+                            ShadeIntensity = 0.6,
+                            OpacityFrom = 0.2,
+                            OpacityTo = 0.9,
+                            Stops = [0, 100],
+                            InverseColors = true
+                        }
+                    },
+
+                Colors = new List<string> { "#006400" },
+                    Stroke = new Stroke { Curve = Curve.Smooth }
+            };
+        base.OnInitialized();
+    }
+
+    private async Task RenderChart() => await chart?.RenderAsync();
+
+    public class Sales
+    {
+        public DateTimeOffset Date { get; set; }
+        public decimal sold { get; set; }
+    }
+}

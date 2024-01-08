@@ -1,0 +1,11 @@
+﻿/* wwwroot/css/styles.css */
+@font-face {
+    font-family: Crima;
+    src: url('fonts/Crima.ttf') format('truetype');
+}
+
+/* wwwroot/css/styles.css */
+.custom-font {
+    font-family: Crima,;
+}
+

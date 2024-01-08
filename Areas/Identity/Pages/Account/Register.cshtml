@@ -1,0 +1,181 @@
+﻿@page
+@model RegisterModel
+
+<section>
+    <!-- Start Content Section -->
+    <div class="content">
+        <div class="form">
+            <div class="center" style="margin-bottom: 20px; margin-top: 20px">
+                <h2>Neuen Account hinzufügen</h2>
+            </div>
+            <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+                <div class="input-form">
+                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="Email" />
+                    <label asp-for="Input.Email">Email</label>
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+                <div class="input-form">
+                    <!-- Drop down einfügen? -->
+                    <input asp-for="Input.Role" class="form-control" autocomplete="off" aria-required="true" placeholder="User, Admin" />
+                    <label asp-for="Input.Role">Rolle</label>
+                    <span asp-validation-for="Input.Role" class="text-danger"></span>
+                </div>
+                <div class="input-form">
+                    <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Passwort" />
+                    <label asp-for="Input.Password">Passwort</label>
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+                <div class="input-form">
+                    <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Password wiederholen" />
+                    <label asp-for="Input.ConfirmPassword">Passwort bestätigen</label>
+                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                </div>
+                <div class="input-form">
+                    <input id="registerSubmit" type="submit" value="Erstellen">
+                </div>
+
+                <!-- Button um abzubrechen  -->
+                <div class="input-form">
+                    <input type="button" onclick="goBack()" value="Abbrechen">
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- End Content Section -->
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<script>
+    function goBack() {
+        window.history.back();
+    }
+</script>
+
+<style>
+   body{
+        background-color: #f0f0f0;
+    }
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Roboto', sans-serif;
+    }
+
+    section {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+    }
+
+        section .content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%; /* 100% Breite */
+            height: 100%;
+            background: #f0f0f0; /* Hintergrundfarbe hinzufügen */
+        }
+
+            section .content .form {
+                width: 80%;
+                max-width: 450px; /* Maximalbreite für grössere Bildschirme */
+                padding: 20px; /* Padding für den Abstand */
+                background: #fff; /* Hintergrundfarbe für Form */
+                border-radius: 10px; 
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
+
+                section .content .form h2 {
+                    color: black;
+                    font-weight: 500;
+                    font-size: 1.5em;
+                    text-align: center;
+                    text-transform: uppercase;
+                    margin-bottom: 20px;
+                    border-bottom: 4px solid green;
+                    display: inline-block;
+                    letter-spacing: 1px;
+                }
+
+                section .content .form .input-form {
+                    margin-bottom: 20px;
+                }
+
+                    section .content .form .input-form span {
+                        font-size: 16px;
+                        margin-bottom: 5px;
+                        display: inline-block;
+                        color: black;
+                        letter-spacing: 1px;
+                    }
+
+                    section .content .form .input-form input {
+                        width: 100%;
+                        padding: 10px;
+                        outline: none;
+                        border: 1px solid #ccc; /* Borderfarbe */
+                        font-size: 16px;
+                        letter-spacing: 1px;
+                        color: black;
+                        background: #f8f8f8; /* Eingabefelder hellere Farbe */
+                        border-radius: 5px;
+                    }
+
+                        section .content .form .input-form input[type="submit"] {
+                            background: green;
+                            color: #fff;
+                            outline: none;
+                            border: none;
+                            font-weight: 500;
+                            cursor: pointer;
+                            border-radius: 5px;
+                        }
+
+                            section .content .form .input-form input[type="submit"]:hover {
+                                background: darkgreen; /* Dünkler bei hover */
+                            }
+
+                        section .content .form .input-form input[type="button"] {
+                            background: lightgreen;
+                            color: black;
+                            outline: none;
+                            border: none;
+                            font-weight: 500;
+                            cursor: pointer;
+                            border-radius: 5px;
+                        }
+
+                            section .content .form .input-form input[type="button"]:hover {
+                                background: darkgreen; /* Dünkler bei hover */
+                                color:white;
+                            }
+
+                      
+                    section .content .form .input-form p {
+                        color: black;
+                    }
+
+                        section .content .form .input-form p a {
+                            color: green;
+                        }
+
+                section .content .form h3 {
+                    color: black;
+                    text-align: center;
+                    margin: 20px 0 10px;
+                    font-weight: 500;
+                }
+
+                .center {
+                    text-align:center;
+                }
+</style>
+
+

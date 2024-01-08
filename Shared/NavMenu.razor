@@ -1,0 +1,128 @@
+﻿@using Hardware4You.Data
+@using Hardware4You.Models
+@using Hardware4You.Pages
+@using MudBlazor
+@inject IProductCategoryService ProductCategoryService
+@inherits LayoutComponentBase
+
+<div class="top-row navbar navbar-dark">
+    <div class="container-fluid">
+        <a href="/"><img src="logo_weiss.png" /></a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        <!-- Für Login Registrierung-->
+    @*     <div class="nav-item px-3">
+    <NavLink class="nav-link" href="Identity/Account/Register">
+        <span class="oi oi-person" aria-hidden="true"></span> Add New Account
+    </NavLink>
+        </div> *@
+
+        <!-- Rollen die der User sieht -->
+        <AuthorizeView Roles="User">
+            <Authorized>
+                <!-- Alle Kategorien die erstellt wurden -->
+                @foreach (var productCat in ProductCategories)
+                {
+                    <div class="nav-item px-3">
+                        <a class="nav-link" href="/products/@productCat.Id">
+                            <span class="oi oi-laptop" aria-hidden="true"></span>@productCat.Name
+                        </a>
+                    </div>
+                }
+                <!-- Warenkorb -->
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/ShoppingCart">
+                        <span class="oi oi-cart" aria-hidden="true"></span>Warenkorb
+                    </NavLink>
+                </div>
+                 <!-- AGB / Datenschutz -->
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/AGB">
+                        <span class="oi oi-file" aria-hidden="true"></span>AGB / Datenschutz
+                    </NavLink>
+                </div>
+
+                <!-- Über uns -->
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/ueberuns">
+                        <span class="oi oi-info" aria-hidden="true"></span>Über uns
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+        <!-- Rollen die der Admin sieht -->
+        <AuthorizeView Roles="Admin">
+            <Authorized>
+                <!-- Dashboard -->
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="dashboard">
+                        <span class="oi oi-graph" aria-hidden="true"></span> Dashboard
+                    </NavLink>
+                </div>
+                <!-- Bestellungen -->
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/orders">
+                        <span class="oi oi-cart" aria-hidden="true"></span> Bestellungen bearbeiten
+                    </NavLink>
+                </div>
+                <!-- Produkte verwalten -->
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/products">
+                        <span class="oi oi-cart" aria-hidden="true"></span> Produkte verwalten
+                    </NavLink>
+                </div>
+                <!-- Produkt Kategorie -->
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/productcategories">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Produktkategorie
+                    </NavLink>
+                </div>
+                <!-- Logs -->
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/logs">
+                        <span class="oi oi-document" aria-hidden="true"></span> Logs
+                    </NavLink>
+                </div>
+                <!-- Account -->
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Identity/Account/Register">
+                        <span class="oi oi-person" aria-hidden="true"></span> Account hinzufügen
+                    </NavLink>
+                </div>
+
+            </Authorized>
+        </AuthorizeView>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+    [EditorRequired]
+    [Parameter]
+    public IEnumerable<ProductCategory> ProductCategories { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        ProductCategories = ProductCategoryService.GetProductCategories();
+    }
+
+}

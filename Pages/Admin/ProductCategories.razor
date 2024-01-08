@@ -1,0 +1,69 @@
+﻿@page "/productcategories"
+@attribute [Authorize(Roles = "Admin")]
+
+@using Hardware4You.Data
+@using Hardware4You.Models
+@using Syncfusion.Blazor.Grids
+@inject IProductCategoryService ProductCategoryService
+
+<PageTitle>Produktkategorie</PageTitle>
+
+<MudGrid Class="pb-12">
+    <!-- Label -->
+    <MudItem xs="12">
+        <MudPaper Class="d-flex justify-content-center" Style="@($"background:#F0F0F0")" Elevation="0">
+            <MudPaper Class="flex-auto pt-3" Style="@($"color:{Colors.Green.Darken3}; padding-bottom:12px; background:{Colors.Shades.Transparent}")">
+                <MudText Typo="Typo.h4" Class="text-center" Style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight:bold">Produktkategorie verwalten</MudText>
+            </MudPaper>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<SfGrid DataSource="@ProdCategories" Toolbar="@(new List<string>() { "Add", "Edit", "Delete", "Cancel", "Update" })" TValue="ProductCategory">
+    <GridEditSettings AllowAdding="true" AllowDeleting="true" AllowEditing="true" Mode="EditMode.Normal"></GridEditSettings>
+    <GridEvents OnActionBegin="ActionBeginHandler" OnActionComplete="ActionCompleteHandler" TValue="ProductCategory"></GridEvents>
+    <GridColumns>
+        <GridColumn Field="@nameof(ProductCategory.Id)" IsPrimaryKey="true" IsIdentity="true" Visible="true" Width="10"></GridColumn>
+        <GridColumn Field="@nameof(ProductCategory.Name)" Width="100"></GridColumn>
+    </GridColumns>
+</SfGrid>
+
+@code {
+    public IEnumerable<ProductCategory> ProdCategories { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        ProdCategories = ProductCategoryService.GetProductCategories();
+    }
+    public void ActionBeginHandler(ActionEventArgs<ProductCategory> Args)
+    {
+        if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save))
+        {
+            if (Args.Action == "Hinzufügen")
+            {
+                ProductCategoryService.InsertProductCategory(Args.Data);
+            }
+        }
+
+        if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save))
+        {
+            if (Args.Action == "Bearbeiten")
+            {
+                ProductCategoryService.UpdateProductCategory(Args.Data.Id, Args.Data);
+            }
+        }
+
+        if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Delete))
+        {
+            ProductCategoryService.DeleteProductCategory(Args.Data.Id);
+        }
+    }
+    public void ActionCompleteHandler(ActionEventArgs<ProductCategory> Args)
+    {
+        if (Args.RequestType.Equals(Syncfusion.Blazor.Grids.Action.Save))
+        {
+            ProdCategories = ProductCategoryService.GetProductCategories();
+        }
+    }
+
+}

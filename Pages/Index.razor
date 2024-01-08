@@ -1,0 +1,40 @@
+﻿@page "/"
+@attribute [Authorize(Roles = "User,Admin")]
+
+<PageTitle>Hardware4You</PageTitle>
+<link rel="icon" type="image/png" href="/Logo.png">
+
+@using MudBlazor
+
+<AuthorizeView>
+    <Authorized>
+<MudGrid Class="pb-12">
+    <!-- Bezeichnungen-->
+    <MudItem xs="12">
+        <MudPaper Class="d-flex justify-content-center" Style="@($"background:#F0F0F0")" Elevation="0">
+            <MudPaper Class="flex-auto pt-2" Style="@($"color:{Colors.Green.Darken3};padding-bottom:12px; background:{Colors.Shades.Transparent}")">
+                <MudText Typo="Typo.h4" Class="text-center" Style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight:bold">Herzlich Willkommen zu unserem Hardware4You Shop</MudText>         
+            </MudPaper>
+        </MudPaper> 
+    </MudItem>
+            <img src="LL31.png" style="width:100%" />
+</MudGrid>
+</Authorized>
+</AuthorizeView>
+
+<AuthorizeView Roles="User">
+<Authorized>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudText Typo="Typo.body1" Align="Align.Center" 
+                Style="color:black; font-weight:normal">
+                    <strong>Bitte wählen Sie die gewünschten Kategorien in der Seitenleiste aus, um die Produkte anzuzeigen. Viel Spaß beim Einkaufen!</strong>
+                </MudText>
+            </MudItem>
+        </MudGrid>
+</Authorized>
+</AuthorizeView>
+
+@code {
+
+    }

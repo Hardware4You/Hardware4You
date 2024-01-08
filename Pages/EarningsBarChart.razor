@@ -1,0 +1,93 @@
+﻿@page "/earnings"
+<!-- Für Statistiken -->
+@using ApexCharts
+@using Hardware4You.Data
+@using Hardware4You.Models
+@inject IOrderStatusLogService OrderStatusLogService
+@inject IOrdersService OrderService
+
+<MudContainer Class="pa-4">
+    <ApexChart TItem="Earnings"
+               Title="Einnahmen für jedes Produkt"
+               Options=options>
+
+        <ApexPointSeries TItem="Earnings"
+                         Items="earnings"
+                         Name="Value"
+                         XValue="@(e => e.ProductName)"
+                         YAggregate="@(e => e.Sum(e => e.earning))"
+                         SeriesType="SeriesType.Bar"
+                         Color="#006400" />
+
+    </ApexChart>
+</MudContainer>
+
+@code {
+    private ApexChartOptions<Earnings> options { get; set; } = new();
+    private List<Earnings> earnings = new List<Earnings>();
+
+    protected override void OnInitialized()
+    {
+        /* wird nur in der Statistik angezeigt, wenn Status der Bestellung auf completed gesetzt wird */
+        var completedOrderLogs = OrderStatusLogService.GetLogs()
+            .Where(log => log.NewStatus == "Erledigt")
+            .ToList();
+
+        foreach (var orderLog in completedOrderLogs)
+        {
+            var order = OrderService.GetOrderById(orderLog.OrderId);
+
+            foreach (var selectedProduct in order.SelectedProducts)
+            {
+                var existingEarning = earnings.FirstOrDefault(e => e.ProductName == selectedProduct.Name);
+                if (existingEarning != null)
+                {
+                    existingEarning.earning += selectedProduct.Price;
+                }
+                else
+                {
+                    earnings.Add(new Earnings
+                        {
+                            ProductName = selectedProduct.Name,
+                            earning = selectedProduct.Price
+                        });
+                }
+            }
+        }
+
+        options.States = new States
+            {
+                Active = new StatesActive
+                {
+                    Filter = new StatesFilter
+                    {
+                        Type = StatesFilterType.none
+
+                    }
+                },
+                Normal = new StatesNormal
+                {
+                    Filter = new StatesFilter
+                    {
+                        Type = StatesFilterType.lighten,
+                        Value = 0.1
+                    }
+                },
+                Hover = new StatesHover
+                {
+                    Filter = new StatesFilter
+                    {
+                        Type = StatesFilterType.darken,
+                        Value = 0.3
+                    }
+                }
+
+        };
+    }
+
+    public class Earnings
+    {
+        public string? ProductName { get; set; }
+        public int earning { get; set; }
+    }
+}

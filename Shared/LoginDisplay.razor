@@ -1,0 +1,43 @@
+﻿<!-- Inhalt für Admin -->
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <MudAppBar Elevation="0" Style="@($"color:{Colors.Shades.White}; background:linear-gradient(to left, #0f7953, #71bd4d);")" Fixed="false" Dense="true">
+            <MudText Align="Align.Left" Typo="Typo.h6">GIB ALTER HARDWARE EINE ZWEITE CHANCE!</MudText>
+            <MudSpacer />
+            <form method="post" action="Identity/Account/Logout">
+                <MudIconButton ButtonType="ButtonType.Submit" DisableElevation="true" Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" />
+            </form>
+        </MudAppBar>
+    </Authorized>
+</AuthorizeView>
+
+<AuthorizeView Roles="User">
+    <Authorized>
+        <!-- Inhalt für User -->
+        <MudAppBar Elevation="0" Style="@($"color:{Colors.Shades.White}; background:linear-gradient(to left, #0f7953, #71bd4d)")" Fixed="false" Dense="true">
+            <MudText Align="Align.Left" Typo="Typo.h6">GIB ALTER HARDWARE EINE ZWEITE CHANCE!</MudText>
+            <MudSpacer />
+            <MudText Typo="Typo.caption" Align="Align.Right">Hi, @context.User.Identity?.Name!</MudText>
+            <MudIconButton Href="/ShoppingCart" DisableElevation="true" Icon="@Icons.Material.Filled.ShoppingCart" Color="Color.Inherit" />
+
+            <form method="post" action="Identity/Account/Logout">
+            <MudIconButton ButtonType="ButtonType.Submit" DisableElevation="true" Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" />
+            </form>
+        </MudAppBar>
+    </Authorized>
+</AuthorizeView>
+
+<!-- nicht eingeloggt-->
+
+<AuthorizeView>
+    <NotAuthorized>
+        <!-- Navbar für nicht angemeldete User -->
+            <MudAppBar Elevation="0" Style="@($"color:{Colors.Shades.White}; background:linear-gradient(to left, #0f7953, #71bd4d)")" Fixed="false" Dense="true">
+            <MudText Align="Align.Left" Typo="Typo.h6">GIB ALTER HARDWARE EINE ZWEITE CHANCE!</MudText>
+                <MudSpacer />
+                <MudButton Href="Identity/Account/Login" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Login" 
+                Style="@($"color:{Colors.Shades.White}; background:{Colors.Green.Darken3}")">Login</MudButton>
+            </MudAppBar>
+    </NotAuthorized>
+</AuthorizeView>
+

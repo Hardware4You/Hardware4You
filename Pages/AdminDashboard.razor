@@ -1,0 +1,28 @@
+﻿@page "/dashboard"
+
+@using ApexCharts
+
+<PageTitle>Admin Dashboard</PageTitle>
+
+<MudGrid Class="pb-4">
+    <!--Label -->
+    <MudItem xs="12">
+        <MudPaper Class="d-flex justify-content-center" Style="@($"background:#F0F0F0")" Elevation="0">
+            <MudPaper Class="flex-auto pt-2" Style="@($"color:{Colors.Green.Darken3}; padding-bottom:12px; background:{Colors.Shades.Transparent}")">
+                <MudText Typo="Typo.h4" Class="text-center" Style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight:bold">Admin Dashboard</MudText>
+            </MudPaper>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+<MudGrid Class="pl-10">
+    <MudItem xs="12" sm="6" md="6" lg="6">
+        <SalesAreaGraph />
+    </MudItem>
+    <MudItem xs="12" sm="6" md="6" lg="6">
+        <EarningsBarChart />
+    </MudItem>
+</MudGrid>
+
+@code {
+
+}

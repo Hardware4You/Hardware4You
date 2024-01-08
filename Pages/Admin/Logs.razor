@@ -1,0 +1,106 @@
+﻿@page "/logs"
+
+@using Hardware4You.Data
+@using Hardware4You.Models
+@inject IOrderStatusLogService OrderStatusLogService
+@inject ISnackbar SnackbarService
+@using MudBlazor
+@using MudBlazor.Components
+
+<PageTitle>Bestellungen</PageTitle>
+
+<MudGrid Class="pb-12">
+    <!-- Label -->
+    <MudItem xs="12">
+        <MudPaper Class="d-flex justify-content-center" Style="@($"background:#F0F0F0")" Elevation="0">
+            <MudPaper Class="flex-auto pt-2" Style="@($"color:{Colors.Green.Darken3}; padding-bottom:12px; background:{Colors.Shades.Transparent}")">
+                <MudText Typo="Typo.h4" Class="text-center" Style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight:bold">Admin Logs</MudText>
+            </MudPaper>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+
+<!-- Logs Table -->
+<MudTable Items="@orderStatusLogs" Class="mt-4" Filter="FilterFunc1" Bordered="true" Dense="true" Hover="true" FixedHeader="true" FixedFooter="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Logs</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString1" Placeholder="Suche" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>ID</MudTh>
+        <MudTh>Zeit</MudTh>
+        <MudTh>Admin</MudTh>
+        <MudTh>Aktivität</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Id</MudTd>
+            <MudTd>@context.Timestamp</MudTd>
+            <MudTd>@context.AdminUsername</MudTd>
+            <MudTd>
+                @{
+                var activityText = $"Hat Bestellstatus von {@context.OrderId} zu {@context.NewStatus} gewechselt";
+            }
+            @activityText
+        </MudTd>
+    </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, int.MaxValue }" InfoFormat="@($"End {infoFormat}")" HorizontalAlignment="HorizontalAlignment.End" HidePageNumber="false" HidePagination="false" HideRowsPerPage="false" />
+        </PagerContent>
+    </MudTable>
+
+@code {
+    private IEnumerable<Hardware4You.Models.OrderStatusLog>? orderStatusLogs { get; set; }
+
+
+    //Tabelle 1
+    //für Suche der Tabelle 1
+    private string searchString1 = "";
+    private HashSet<Hardware4You.Models.OrderStatusLog> selectedItems = new HashSet<Hardware4You.Models.OrderStatusLog>();
+
+    //für Umbruch Tabelle 1
+    private string infoFormat = "{first_item}-{last_item} of {all_items}";
+
+    private bool FilterFunc1(Hardware4You.Models.OrderStatusLog orderStatusLogs) => FilterFunc(orderStatusLogs, searchString1);
+
+    protected override void OnInitialized()
+    {
+        LoadLogs();
+    }
+
+    //laden der Bestellungen von DB
+    private void LoadLogs()
+    {
+        try
+        {
+            orderStatusLogs = OrderStatusLogService.GetLogs();
+        }
+        catch (Exception ex)
+        {
+            SnackbarService.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    //Suchfunktion Tabelle 1
+    private bool FilterFunc(Hardware4You.Models.OrderStatusLog logs, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+
+        // auf Nullwerte prüfen, bevor verbunden wird
+        if (logs != null)
+        {
+            if (!string.IsNullOrWhiteSpace(logs.AdminUsername) && logs.AdminUsername.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if (!string.IsNullOrWhiteSpace(logs.NewStatus) && logs.NewStatus.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if ($"{logs.OrderId}".Contains(searchString))
+                return true;
+        }
+
+        return false;
+    }
+}

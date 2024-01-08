@@ -1,0 +1,37 @@
+﻿@inherits LayoutComponentBase
+
+<PageTitle>Hardware4You</PageTitle>
+<link rel="icon" type="image/png" href="/Logo.png">
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+    <main>
+        <div class="top-row px-4 auth">
+            <LoginDisplay />
+        </div>
+
+        <article class="content px-4">
+            @Body
+            <AuthorizeView>
+    <NotAuthorized>
+        <!-- Navbar für nicht angemeldete User -->
+            <MudGrid>
+            <MudItem xs="12">
+                <MudPaper Class="d-flex justify-content-center" Style="@($"background:#F0F0F0")" Elevation="0">
+                    <MudPaper Class="flex-auto pt-2" Style="@($"color:{Colors.Green.Darken3};padding-bottom:12px; background:{Colors.Shades.Transparent}")">
+                                    <MudText Typo="Typo.h4" Class="text-center" Style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight:bold">Bitte oben rechts Login wählen und anmelden </MudText>
+                                </MudPaper>
+            </MudPaper>
+            </MudItem>
+                        <img src="LL31.png" style="width:100%" />
+        </MudGrid>
+    </NotAuthorized>
+</AuthorizeView>
+        </article>
+    </main>
+</div>
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />

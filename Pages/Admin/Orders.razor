@@ -1,0 +1,286 @@
+﻿@page "/orders"
+@attribute [Authorize(Roles = "Admin")]
+
+@using Hardware4You.Data
+@using Hardware4You.Models
+@inject IOrdersService OrdersService
+@inject IOrdersStatusService OrdersStatusService
+@inject IOrderStatusLogService OrderStatusLogService
+@inject ISnackbar SnackbarService
+@using MudBlazor
+@using MudBlazor.Components
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Bestellungen</PageTitle>
+
+<MudGrid Class="pb-12">
+    <!-- Bezeichnung -->
+    <MudItem xs="12">
+        <MudPaper Class="d-flex justify-content-center" Style="@($"background:#F0F0F0")" Elevation="0">
+            <MudPaper Class="flex-auto pt-2" Style="@($"color:{Colors.Green.Darken3}; padding-bottom:12px; background:{Colors.Shades.Transparent}")">
+                <MudText Typo="Typo.h4" Class="text-center" Style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight:bold">Bestellungen bearbeiten</MudText>
+            </MudPaper>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<MudTable Items="@orders" Class="mt-4" Filter="FilterFunc1" Bordered="true" Dense="true" Hover="true" FixedHeader="true" FixedFooter="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Bestellungen</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString1" Placeholder="Suchen" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Bestell ID</MudTh>
+        <MudTh>Zahlungsstatus</MudTh>
+        <MudTh>Barbezahlung</MudTh>
+        <MudTh>Vorauskasse</MudTh>
+        <MudTh>Ausgewählte Produkte</MudTh>
+        <MudTh>Weinfelden</MudTh>
+        <MudTh>Sévaz</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Adresse</MudTh>
+        <MudTh>Ort</MudTh>
+        <MudTh>Nummer</MudTh>
+        <MudTh>Bestell Status</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Bestell ID">@context.OrderID</MudTd>
+            <MudTd DataLabel="Status">@context.Status</MudTd>
+            <MudTd DataLabel="Barbezahlung">@context.cashOnDelivery</MudTd>
+            <MudTd DataLabel="Vorauskasse">@context.prePayment</MudTd>
+            <MudTd DataLabel="Ausgewählte Produkte">
+                @if (context.SelectedProducts != null && context.SelectedProducts.Any())
+            {
+                var productNames = context.SelectedProducts.Select(p => p.Name);
+                var productList = string.Join(", ", productNames);
+                <span>@productList</span>
+            }
+            else
+            {
+                <span>Keine Produkte ausgewählt</span>
+            }
+        </MudTd>
+        <MudTd DataLabel="Weinfelden">@context.pickCity1</MudTd>
+            <MudTd DataLabel="Sévaz">@context.pickCity2</MudTd>
+            <MudTd DataLabel="Name">@context.fullName</MudTd>
+            <MudTd DataLabel="Adresse">@context.Address</MudTd>
+            <MudTd DataLabel="Ort">@context.City</MudTd>
+            <MudTd DataLabel="Nummer">@context.phoneNumber</MudTd>
+            <MudTd DataLabel="Bestell Status">
+                <MudSelect AdornmentColor="Color.Tertiary" @bind-Value="@statusOfOrder" Label="Status">
+                    <MudSelectItem Value="Processing">in Bearbeitung</MudSelectItem>
+                    <MudSelectItem Value="Shipped">Versendet</MudSelectItem>
+                    <MudSelectItem Value="Completed">Abgeschlossen</MudSelectItem>
+                    <MudSelectItem Value="Returned">Zurückgegeben</MudSelectItem>
+                </MudSelect>
+                <MudButton Size="Size.Small" Color="Color.Tertiary" Variant="Variant.Filled" OnClick="@(() => SaveOrderStatus(context.OrderID, statusOfOrder))">Speichern</MudButton>
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, int.MaxValue }" InfoFormat="@($"End {infoFormat}")" HorizontalAlignment="HorizontalAlignment.End" HidePageNumber="false" HidePagination="false" HideRowsPerPage="false" />
+        </PagerContent>
+    </MudTable>
+
+    <MudDivider DividerType="DividerType.Middle"/>
+
+    <MudTable Items="@ordersStatus" Filter="FilterFunc2" Class="mt-4" Bordered="true" Dense="true" Hover="true" FixedHeader="true" FixedFooter="true">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Bestell Status</MudText>
+            <MudSpacer />
+            <MudTextField @bind-Value="searchString2" Placeholder="Suchen" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Bestell ID</MudTh>
+            <MudTh>Bestell Status</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            @if (context.orderStatus != "Completed")
+        {
+            <MudTd DataLabel="OrderID">@context.OrderID</MudTd>
+            <MudTd DataLabel="Order Status">@context.orderStatus</MudTd>
+        }
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, int.MaxValue }" InfoFormat="@($"End {infoFormat2}")" HorizontalAlignment="HorizontalAlignment.End" HidePageNumber="false" HidePagination="false" HideRowsPerPage="false" />
+    </PagerContent>
+</MudTable>
+
+
+    @code {
+    private IEnumerable<Hardware4You.Models.Orders> orders { get; set; }
+    private IEnumerable<Hardware4You.Models.OrdersStatus> ordersStatus { get; set; }
+
+
+    //Tabelle 1
+    //für Suchleiste von Tabelle 1
+    private string searchString1 = "";
+    private HashSet<Hardware4You.Models.Orders> selectedItems = new HashSet<Hardware4You.Models.Orders>();
+
+    //für Umbruch von Tabelle 1
+    private string infoFormat = "{first_item}-{last_item} of {all_items}";
+
+    private bool FilterFunc1(Hardware4You.Models.Orders orders) => FilterFunc(orders, searchString1);
+
+    //Tabelle 2
+    //für Suchleiste von Tabelle 2
+    private string searchString2 = "";
+    private HashSet<Hardware4You.Models.OrdersStatus> selectedItems2 = new HashSet<Hardware4You.Models.OrdersStatus>();
+
+    //für Umbruch von Tabelle 2
+    private string infoFormat2 = "{first_item}-{last_item} of {all_items}";
+
+    private bool FilterFunc2(Hardware4You.Models.OrdersStatus ordersStatus) => FilterFunc3(ordersStatus, searchString2);
+
+
+    //Dropdown Werte zum speichern des Status
+    private string statusOfOrder = "";
+    private const string Processing = "in Bearbeitung";
+    private const string Shipped = "Versendet";
+    private const string Completed = "Erledigt";
+    private const string Returned = "Zurückgegeben";
+
+
+
+    protected override void OnInitialized()
+    {
+        LoadOrders();
+    }
+
+    //Bestellungen von DB und Bestellstatus von DB - Filter für Erledigt
+    private void LoadOrders()
+    {
+        try
+        {
+            // Bestellstatus von DB
+            ordersStatus = OrdersStatusService.GetOrdersStatus();
+
+            // Bestellung von DB
+            orders = OrdersService.GetOrders();
+
+            // Filter für Erledigt
+            orders = orders.Where(order =>
+                ordersStatus.Any(status => status.OrderID == order.OrderID && status.orderStatus != Completed)
+            ).ToList();
+        }
+        catch (Exception ex)
+        {
+            SnackbarService.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    //für Suche in Tabelle 1
+    private bool FilterFunc(Hardware4You.Models.Orders orders, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+
+        // 0 Werte prüfen bevor aufgerufen wird
+        if (orders != null)
+        {
+            if (!string.IsNullOrWhiteSpace(orders.pickCity1) && orders.pickCity1.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if (!string.IsNullOrWhiteSpace(orders.pickCity2) && orders.pickCity2.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if (!string.IsNullOrWhiteSpace(orders.Status) && orders.Status.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if (!string.IsNullOrWhiteSpace(orders.City) && orders.City.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if (!string.IsNullOrWhiteSpace(orders.cashOnDelivery) && orders.cashOnDelivery.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if (!string.IsNullOrWhiteSpace(orders.prePayment) && orders.prePayment.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if ($"{orders.OrderID}".Contains(searchString))
+                return true;
+        }
+
+        return false;
+    }
+
+    //für Suche in Tabelle 2
+    private bool FilterFunc3(Hardware4You.Models.OrdersStatus ordersStatus, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+
+        // 0 Werte prüfen bevor aufgerufen wird
+        if (ordersStatus != null)
+        {
+            if (!string.IsNullOrWhiteSpace(ordersStatus.orderStatus) && ordersStatus.orderStatus.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if ($"{ordersStatus.OrderID}".Contains(searchString))
+                return true;
+        }
+
+        return false;
+    }
+
+    public async void SaveOrderStatus(long orderId, string newStatus)
+    {
+        // Bestellung mit der Bestell ID finden
+        var orderToUpdate = orders.FirstOrDefault(o => o.OrderID == orderId);
+
+        // bestehenden Status von Bestell ID geben
+        var existingOrderStatus = OrdersStatusService.GetOrderStatusById(orderId);
+
+        if (orderToUpdate != null)
+        {
+            // Instanz erstellen mit dem Update Status
+            var updatedOrderStatus = new Hardware4You.Models.OrdersStatus
+                {
+                    OrderID = orderId,
+                    orderStatus = newStatus
+                };
+
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var adminName = authState.User.Identity?.Name;
+            // Log Informationen ablegen
+            OrderStatusLog log = new OrderStatusLog
+                {
+                    AdminUsername = adminName,
+                    OrderId = orderId,
+                    NewStatus = newStatus,
+                    Timestamp = DateTime.UtcNow
+                };
+
+            try
+            {
+                // Prüft ob Status bereits in der DB ist
+                if (existingOrderStatus != null)
+                {
+                    // Updated den bestehenden Status
+                    existingOrderStatus.orderStatus = newStatus;
+                    OrdersStatusService.UpdateOrderStatus(existingOrderStatus);
+                }
+                else
+                {
+                    // trägt neuen Status ein
+                    await OrdersStatusService.InsertOrderStatusAsync(updatedOrderStatus);
+                }
+
+                // Log erstellt
+                await OrderStatusLogService.InsertLogAsync(log);
+
+                SnackbarService.Add("Bestellstatus erfolgreich aktualisiert!", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception: {ex}");
+                SnackbarService.Add($"Aktualisierung des Auftragsstatus fehlgeschlagen. Ausnahme: {ex.Message}", Severity.Error);
+            }
+        }
+        else
+        {
+            SnackbarService.Add("Bestellung nicht gefunden", Severity.Error);
+        }
+    }
+}
+
+

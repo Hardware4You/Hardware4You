@@ -1,0 +1,102 @@
+﻿@page "/products/{Cat:int}/{Prod:int}"
+@attribute [Authorize(Roles = "User, Admin")]
+
+<PageTitle>Product Details</PageTitle>
+
+@using Hardware4You.Data
+@using Hardware4You.Models
+@using MudBlazor
+@inject IProductService ProductService
+@inject CartService CartService
+@inject ISnackbar SnackbarService
+<MudGrid>
+    <!-- Product Details Label -->
+    <MudItem xs="12">
+        <MudPaper Class="d-flex justify-content-center" Style="@($"background:{Colors.Shades.White}")">
+            <MudPaper Class="flex-auto pt-2" Style="@($"color:{Colors.Green.Darken3}; background:{Colors.Shades.Transparent}")">
+                <MudText Typo="Typo.h4" Class="text-center"
+                         Style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight:bold"> Produkt Details
+                </MudText>
+            </MudPaper>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+<div class="d-flex justify-content-center align-items-center mt-1" style="height: calc(100vh - 30vh); padding-top: 10px">
+    @foreach (var product in Products)
+    {
+        if (product.CategoryId == Cat && product.Id == Prod && product.Quantity > 0)
+        {
+            <MudPaper Class="d-flex flex-column align-items-center mt-1 mb-3 mx-auto" Style="@($"background:{Colors.Shades.White}; max-width:500px")">
+                <MudImage Src="@($"data:{product.MediaType};base64,{Convert.ToBase64String(product.Media)}")" Height="200" Alt="@product.Name" Elevation="0" Class="text-center" />
+
+                <MudText Typo="Typo.h5" Class="text-center"
+                         Style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight:bold">
+                    @product.Name
+                </MudText>
+                <div class="d-flex align-items-center pa-2">
+                    @* <MudChip Disabled="true" Style="@($"color:{Colors.Green.Darken4}")">ID: @product.Id</MudChip> *@
+                        @if(product.Quantity == 0)
+                    {
+                        <MudChip Disabled="true" Style="@($"color:{Colors.Grey.Darken4}")">Out Of Stock</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip Disabled="true" Style="@($"color:{Colors.Green.Darken3}")">an Lager: @product.Quantity</MudChip>
+                    }
+                    </div>
+                    <div class="d-flex flex-column align-items-center pa-2">
+                        <MudText Typo="Typo.caption" Class="text-center"
+                                 Style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight:bold">
+                            <strong>Beschreibung: </strong> @product.Description <br /><br />
+                            <MudChip Style="@($"color:{Colors.Green.Darken3}")">CHF @product.Price</MudChip>
+                    </MudText>
+                </div>
+
+                @if (DisplayBuyButton)
+                {
+                    <MudPaper Class="pa-6 justify-content-center">
+                        <!-- justify-content-center class hinzugefügt -->
+                        <MudFab Size="Size.Medium" Class="pa-6"
+                                EndIcon="@Icons.Material.Filled.AddShoppingCart" @onclick="() => Buy(product.Id, Products.ToList())"
+                                Style="@($"color:{Colors.Shades.White}; background:{Colors.Green.Darken3}")"
+                                Label="zum Warenkorb hinzufügen" />
+                    </MudPaper>
+                }
+            </MudPaper>
+        }
+    }
+</div>
+
+
+@code {
+    [Parameter]
+    public int Cat { get; set; }
+
+    [Parameter]
+    public int Prod { get; set; }
+
+    [EditorRequired]
+    [Parameter]
+    public IEnumerable<Product> Products { get; set; } = null!;
+    Product pr = new();
+
+    [Parameter]
+    public bool DisplayBuyButton { get; set; } = true;
+
+    protected override void OnInitialized()
+    {
+        Products = ProductService.GetProducts();
+    }
+
+    private void Buy(long productId, List<Product> products)
+    {
+        var product = products.FirstOrDefault(p => p.Id == productId);
+
+        if (product != null)
+        {
+            CartService.AddProductToCart(productId, products);
+            /* POP UP für eine hinzugefügte Bestellung */
+            SnackbarService.Add($"Das Produkt {product.Name} wurde zu deinem Warenkorb hinzugefügt.", Severity.Success);
+        }
+    }
+}

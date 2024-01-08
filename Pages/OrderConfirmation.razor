@@ -1,0 +1,32 @@
+﻿@page "/OrderConfirmation/{orderId:int}"
+
+<PageTitle>Bestellbestätigung</PageTitle>
+
+<!-- Label -->
+<MudGrid>
+    <MudItem xs="12">
+        <MudText Align="Align.Center" Color="Color.Tertiary" Typo="Typo.h3" class="custom-font" Style="font-family:Crima; font-weight:bolder"></MudText>
+    </MudItem>
+
+    <MudItem xs="12">
+        <MudText Typo="Typo.h6" Align="Align.Center">Vielen Dank für die Bestellung! Deine Bestellnummer ist: @OrderId</MudText>
+    </MudItem>
+</MudGrid>
+
+<!-- Image -->
+<MudGrid>
+    <MudItem xs="12" Class="d-flex justify-content-center align-items-center">
+        <MudImage Src="LL.png" Alt="Empty Cart" Elevation="0" />
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    public int OrderId { get; set; }
+}
+
+<style>
+    .custom-font {
+        font-family:Crima;
+    }
+</style>

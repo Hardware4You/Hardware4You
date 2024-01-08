@@ -1,0 +1,424 @@
+﻿@page "/ShoppingCart"
+@attribute [Authorize(Roles = "Admin, User")]
+
+@using Hardware4You.Data
+@using Hardware4You.Models
+@using MudBlazor
+@inject CartService CartService
+@inject IProductService ProductService
+@inject ISnackbar SnackbarService
+@inject NavigationManager NavigationManager
+@inject IOrdersService OrdersService
+
+
+<PageTitle>Warenkorb</PageTitle>
+
+<MudGrid>
+    <!-- Warenkorb -->
+    <MudItem xs="12">
+        <MudPaper Class="d-flex justify-content-center" Style="@($"background:#F0F0F0")" Elevation="0">
+            <MudPaper Class="flex-auto pt-2" Style="@($"color:{Colors.Green.Darken3}; padding-bottom:12px; background:{Colors.Shades.Transparent}")">
+                <MudText Typo="Typo.h4" Class="text-center pa-4" 
+                Style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight:bold">Warenkorb</MudText>
+            </MudPaper>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@if (Products.Count() > 0)
+{
+    <MudGrid>
+        <!-- 'Items in Cart' Label -->
+        <MudItem xs="12">
+            <MudPaper Class="d-flex justify-content-center" Style="@($"background:{Colors.Shades.White}")">
+                <MudPaper Class="flex-auto pt-2" Style="@($"color:{Colors.Green.Darken3}; background:{Colors.Shades.Transparent}")">
+                    <MudText Typo="Typo.body1" Class="text-center pa-4"
+                             Style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight:bold">
+                        Du hast @Products.Count Produkt/e in deinem Warenkorb
+                    </MudText>
+                </MudPaper>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+    <MudGrid>
+
+        <!-- Zeigt ausgewählte Produkte an -->
+        @foreach (var product in Products)
+        {
+            <MudItem xs="3">
+               <MudCardContent>
+                    <div style="height: 200px;  overflow: hidden;">
+                        <img src="@GetImageUrl(product)" style="width: 100%; height: 100%; object-fit: contain;" />
+                    </div>
+                    <div class="d-flex align-items-center pa-2">
+                        <MudText Typo="Typo.h6">@product.Name</MudText>
+                    </div>
+                    <MudChip Style="@($"color:{Colors.Green.Darken3}")">CHF @product.Price</MudChip>
+                </MudCardContent>
+                </MudItem>
+        }
+        </MudGrid>
+        <MudDivider/>
+
+        <!-- Proceed to Checkout BUTTON -->
+        <MudGrid>
+        <MudItem xs="12" Class="d-flex justify-content-center align-items-center">
+            <MudPaper Class="pa-6" Elevation="0">
+                <MudFab Size="Size.Medium"
+                        EndIcon="@Icons.Material.Filled.ShoppingCartCheckout"
+                        OnClick="@checkoutPopOverOpen"
+                        Style="@($"color:{Colors.Shades.White}; background:{Colors.Green.Darken3}")"
+                        Label="weiter zur Kasse" />
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Checkout PopUp -->
+    <MudPopover Open="@checkoutPopOver" AnchorOrigin="@AnchorOrigin" TransformOrigin="@TransformOrigin" Fixed="true">
+                    <div class="pa-4">
+                        <MudText Align="Align.Center" Typo="Typo.h5">Zur Kasse</MudText> 
+                        <MudForm>
+                            <MudText Align="Align.Left">Zahlungsmethode</MudText>
+
+                            <MudCheckBox @bind-Value="@cashOnDelivery" Label="Barbezahlung" />
+                            <MudCheckBox @bind-Value="@prePayment" Label="Vorkasse" />
+
+                            <MudDivider />
+                            <MudText Align="Align.Left">Lieferoptionen</MudText>
+                            <MudCheckBox @bind-Value="@pickCity1" Label="Abholung Weinfelden" />
+                            @if (pickCity1)
+                            {
+                                <MudTextField Class="pa-2" @bind-Value="FullName" Label="Full Name" Required="true" />
+                            }
+                            <MudCheckBox @bind-Value="@pickCity2" Label="Abholung Sévaz" />
+                            @if (pickCity2)
+                            {
+                                <MudTextField Class="pa-2" @bind-Value="FullName" Label="Full Name" Required="true" />
+                            }
+                            <MudCheckBox @bind-Value="@shippingAddress" Label="Lieferadresse" />
+                            
+                            <MudFab Size="Size.Medium"
+                            EndIcon="@Icons.Material.Filled.ShoppingCartCheckout"
+                            OnClick="@SubmitCheckoutPopOver"
+                            Style="@($"color:{Colors.Shades.White}; background:{Colors.Green.Darken3}")"
+                            Class="pa-4 text-center"
+                            Label="Weiter" />
+                            </MudForm>
+                    </div>
+    </MudPopover>
+    
+    <!-- Order Confirmation Pop Up -->
+    <MudPopover Open="@orderConfirmPopOver" AnchorOrigin="@AnchorOrigin" TransformOrigin="@TransformOrigin" Fixed="false" MaxHeight="500">
+        <div class="pa-4">
+            <MudText Align="Align.Center" Typo="Typo.h5">Bestellbestätigung</MudText>
+            <MudText Align="Align.Center" Typo="Typo.body2">
+                <strong>Total Kosten: </strong>@Products.Sum(p => p.Price) <strong>CHF</strong>
+            </MudText>
+
+            <MudDivider />
+
+        <!-- Displaying Products in list in Checkout Pop-Up -->
+        @foreach (var product in Products)
+        {
+            <MudItem xs="12" md="6">
+                <MudPaper Width="100%" Elevation="0">
+                    <MudList Clickable="false" Dense="true">
+                        <MudListItem>
+                            <div class="d-flex align-items-center">
+                                <MudText>@product.Name</MudText>
+                                 <MudChip Style="@($"color:{Colors.Green.Darken3}")">CHF @product.Price</MudChip>
+                                </div>
+                            </MudListItem>
+                    </MudList>
+                </MudPaper>
+            </MudItem>
+        }
+
+        <!-- If (Pre-Payment) is Selected -->
+            @if (prePayment == true)
+            {
+                <MudDivider />
+                <MudText Align="Align.Center" Class="pa-2" Typo="Typo.h6">Bitte tätige die Bezahlung an das untenstehendes Konto</MudText>
+                <MudPaper Width="100%" Class="pa-2" Elevation="0">
+                    <MudList Clickable="false" Dense="true" DisableGutters="false">
+                        <MudListItem Icon="@Icons.Material.Filled.AccountBalance" IconColor="Color.Tertiary" Text="IBAN: CH00 1234 5678 9123 4567 8" />
+                        <MudListItem Icon="@Icons.Material.Filled.Work" IconColor="Color.Tertiary" Text="Firma: Lidl Schweiz DL AG" />
+                        <MudListItem Icon="@Icons.Material.Filled.Place" IconColor="Color.Tertiary" Text="Ort / PLZ: Weinfelden 8570" />
+                        <MudListItem Icon="@Icons.Material.Filled.Numbers" IconColor="Color.Tertiary">Bestell Nr. / Referenznummer: @orderId</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.AttachMoney" IconColor="Color.Tertiary">zu bezahlen: CHF @(Products.Sum(p => p.Price))</MudListItem>
+                    </MudList>
+                </MudPaper>
+
+                <MudAlert Class="pa-2" Severity="Severity.Info" Dense="true">Bitte tätige die Bezahlung an das untenstehendes Konto und klicke auf das Button!</MudAlert>
+                <div class="d-flex justify-content-center align-items-center">
+                    <MudButton Class="pa-2" Variant="Variant.Filled" OnClick="@paidButton" DisableElevation="true" Style="@($"color:{Colors.Shades.White}; background:{Colors.Green.Darken3}")">BEZAHLT</MudButton>
+                </div>
+            }
+            else
+            {
+                <MudDivider/>
+                <MudText Align="Align.Center" Class="pa-2" Typo="Typo.caption" Color="Color.Info">Du hast Barbezahlung ausgewählt.</MudText>
+            }
+
+            <!-- If (Pickeup at Weinfelden) is Selected -->
+            @if (pickCity1 == true)
+            {
+
+                <MudDivider />
+                <MudText Align="Align.Center" Class="pa-2" Typo="Typo.caption" Color="Color.Tertiary">Du kannst deine Bestellung 2 Tagen in Weinfelden abholen.</MudText>
+            }
+            else if (pickCity2 == true)
+            {
+                <!-- If (Pickup at Sevaz) is Selected -->
+                <MudDivider />
+                <MudPaper>
+                    <MudText Align="Align.Center" Class="pa-2" Typo="Typo.caption" Color="Color.Tertiary">Du kannst deine Bestellung 3 Tagen in Sévaz abholen.</MudText>
+                </MudPaper>
+            }    
+            else if (shippingAddress == true)
+            {
+                <!-- If (Shipping Address) is Selected -> Show Address form-->
+                <MudDivider />
+                <MudPaper Class="pa-2" Elevation="0">
+                    <MudText Align="Align.Center" Typo="Typo.h6" Class="mb-1">Bitte Lieferadresse angeben</MudText>
+                    <MudText Align="Align.Center" Typo="Typo.h5" Class="mb-4">Lieferadresse</MudText>
+
+
+                    <MudForm>
+                        <MudTextField @bind-Value="FullName" Label="Name" Required="true" />
+                        <MudTextField @bind-Value="Address" Label="Adresse" Required="true" />
+                        <MudTextField @bind-Value="City" Label="Ort" Required="true" />
+                        <MudTextField @bind-Value="PhoneNumber" Label="Nummer" Required="true" />
+                        <br />
+                        <div class="d-flex justify-content-center align-items-center">
+                           <MudButton Class="pa-2" OnClick="ShippingAddressForm" Variant="Variant.Filled"
+                                       Style="@($"color:{Colors.Shades.White}; background:{Colors.Green.Darken3}")"
+                                       Disabled="IsSubmitButtonDisabled">Senden</MudButton>
+                        </div>
+                    </MudForm>
+                </MudPaper>
+            }
+            else
+            {
+            <!-- If (None of the Delivery Option) is Selected -->
+                <MudDivider />
+                <MudText Align="Align.Center" Typo="Typo.h6" Class="pa-2" Color="Color.Warning">Du hast keine Option ausgewählt. Bitte bestelle erneut!</MudText>
+            }
+
+            <!-- Alert -->
+            <MudPaper Class="pa-4" Elevation="0">
+            <MudAlert Dense="true" Severity="Severity.Info" Variant="Variant.Filled">
+                    Beim drücken von [Bestellung bestätigen], wird deine Bestellung ausgelöst.
+            </MudAlert>
+            </MudPaper>
+
+
+            <!-- Confirm Order Button -->
+            <div class="d-flex justify-content-center align-items-center">
+            <MudFab Size="Size.Medium"
+                EndIcon="@Icons.Material.Filled.ShoppingCartCheckout"
+                Style="@($"color:{Colors.Shades.White}; background:{Colors.Green.Darken3}")"
+                Class="pa-4 text-center"
+                OnClick="@orderConfirmed"
+                Label="Bestellung bestätigen" />
+            </div>
+        </div>
+    </MudPopover>
+    
+
+}
+else
+{
+    <!-- leerer Warenkorb -->
+    <MudGrid>
+        <MudItem xs="12" Class="d-flex justify-content-center align-items-center">
+            <MudImage Src="cart-empty.png" Alt="Empty Cart" Elevation="0" />
+        </MudItem>
+    </MudGrid>
+}
+
+
+@code {
+    List<Product> Products = new List<Product>();
+
+    Product pr = new();
+
+    //Zufällige Klassendeklaration
+    private static readonly Random random = new Random();
+    private int orderId;
+
+
+    //zum Zentrieren von Pop-Ups
+    public Origin TransformOrigin { get; set; } = Origin.CenterCenter;
+    public Origin AnchorOrigin { get; set; } = Origin.CenterCenter;
+
+    //Resultat Bezahlt Button
+    public bool paid { get; set; } = false;
+
+
+    //checkboxes 
+    public bool cashOnDelivery { get; set; } = false;
+    public bool prePayment { get; set; } = false;
+    public bool pickCity1 { get; set; } = false;
+    public bool pickCity2 { get; set; } = false;
+    public bool shippingAddress { get; set; } = false;
+    public bool FN { get; set; }
+
+
+    //Lieferadressform
+    public string FullName { get; set; } = "";
+    public string Address { get; set; } = "";
+    public string City { get; set; } = "";
+    public string PhoneNumber { get; set; } = "";
+
+    //Ausgewählte Produkte an die Produktklasse übergeben
+    protected override void OnInitialized()
+    {
+        Products = CartService.SelectedItems;
+    }
+
+    //boolsche Eigenschaften für Pop Ups
+    public bool checkoutPopOver;
+    public bool orderConfirmPopOver;
+
+    //checkout Popup
+    public void checkoutPopOverOpen()
+    {
+
+        if (checkoutPopOver)
+            checkoutPopOver = false;
+        else
+            checkoutPopOver = true;
+    }
+
+    //function to check if multiple delivery & payment methods are selected
+    public void SubmitCheckoutPopOver()
+    {
+        // Check if more than one option is selected for Payment Method or Delivery Options
+        if ((cashOnDelivery ? 1 : 0) + (prePayment ? 1 : 0) > 1 ||
+            (pickCity1 ? 1 : 0) + (pickCity2 ? 1 : 0) + (shippingAddress ? 1 : 0) > 1)
+        {
+            // Displaying an error message
+            SnackbarService.Add("Please select only one option for Payment Method and Delivery Options.", Severity.Error);
+        }
+        else
+        {
+            // Calling order Confirmation pop up function
+            GenerateOrderId();
+            orderConfirmPopOverOpen();
+        }
+    }
+
+    //PopUp für Bestellbestätigung
+    public void orderConfirmPopOverOpen()
+    {
+        checkoutPopOver = false;
+
+        if (orderConfirmPopOver)
+            orderConfirmPopOver = false;
+        else
+            orderConfirmPopOver = true;
+    }
+
+    //Random BestellID erstellen
+    private void GenerateOrderId()
+    {
+        // Random 4-Zeichen number generieren
+        orderId = random.Next(1000, 9999);
+    }
+
+
+    //Bestellung bestätigt
+    public async void orderConfirmed()
+    {
+        orderConfirmPopOver = false;
+
+        // Erstellen Sie eine Instanz von Orders und legen Sie deren Eigenschaften fest
+        Orders order = new Orders
+            {
+                OrderID = orderId,
+                Status = paid ? "bezahlt" : null,
+                cashOnDelivery = cashOnDelivery ? "Barbezahlung" : null,
+                prePayment = prePayment ? "Vorkasse gemacht" : null,
+                pickCity1 = pickCity1 ? "Abholung Weinfelden" : null,
+                pickCity2 = pickCity2 ? "Abholung Sévaz" : null,
+                Address = shippingAddress ? Address : null,
+                City = shippingAddress ? City : null,
+                phoneNumber = shippingAddress ? PhoneNumber : null,
+                fullName = (pickCity1 || pickCity2 || shippingAddress) ? FullName : null,
+                SelectedProducts = Products.Select(p => new Orders.OrderedProduct
+                {
+                    Name = p.Name,
+                    Price = Products.Sum(p => p.Price)
+                }).ToList()
+            };
+
+        // Fügen Sie die Bestellung mit Ihrem OrdersService zur Datenbank hinzu
+        try
+        {
+            await OrdersService.InsertOrderAsync(order);
+            SnackbarService.Add("Bestellung platziert!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            SnackbarService.Add($"Fehler bei der Bestellung: {ex.Message}", Severity.Error);
+        }
+
+        // Anzahl an Lager aktualisieren
+        foreach (var selectedProduct in order.SelectedProducts)
+        {
+            var product = Products.FirstOrDefault(p => p.Name == selectedProduct.Name);
+
+            if (product != null)
+            {
+                // Prüfen ob noch genug an Lager ist
+                if (product.Quantity > 0)
+                {
+                    product.Quantity -= 1;
+                    ProductService.UpdateProduct(selectedProduct.Name, product);
+                }
+                else
+                {
+                    SnackbarService.Add($"{product.Name} is out of Stock.", Severity.Error);
+                }
+            }
+        }
+
+        // Eigenschaften zurücksetzen und zurück gehen
+        paid = false;
+        CartService.ClearSelectedItems();
+        NavigationManager.NavigateTo($"/OrderConfirmation/{orderId}");
+    }
+
+
+    //für Bezahlt Button im Bestätigung
+    public void paidButton()
+    {
+        paid = true;
+    }
+
+
+    //converting bytes to image
+    private string GetImageUrl(Product product)
+    {
+            var base64Image = Convert.ToBase64String(product.Media);
+            return $"data:{product.MediaType};base64,{base64Image}";
+    }
+
+    //Absende button ausgegraut, wenn Felder leer sind
+    private bool IsSubmitButtonDisabled =>
+        string.IsNullOrWhiteSpace(FullName) || string.IsNullOrWhiteSpace(Address) ||
+        string.IsNullOrWhiteSpace(City) || string.IsNullOrWhiteSpace(PhoneNumber);
+
+    //Lieferadresse
+    private void ShippingAddressForm()
+    {
+        SnackbarService.Add("Danke für die Lieferadresse!", Severity.Success);
+    }
+}
+
+<style>
+    .image {
+        height: 100%;
+    }
+</style>
